@@ -8,8 +8,14 @@ import okio.Path.Companion.toPath
 fun Application.configureRouting() {
     routing {
         route("/") {
-            staticRootFolder = "src/commonMain/resources/static".toPath()
-            file("index.html", "index.html")
+            val rootFolder = "src/commonMain/resources/static".toPath()
+            staticRootFolder = rootFolder
+            fileSystem.listRecursively(rootFolder).filter { path ->
+                fileSystem.metadata(path).isRegularFile
+            }.forEach { path ->
+                val relativePath = path.relativeTo(rootFolder).toString()
+                file(relativePath, relativePath)
+            }
             default("index.html")
 
             route("assets") {
