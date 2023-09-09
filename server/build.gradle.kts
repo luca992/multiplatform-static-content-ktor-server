@@ -12,15 +12,14 @@ object Targets {
     val macosTargets = arrayOf(
         "macosX64", "macosArm64",
     )
-    val darwinTargets = macosTargets
     val linuxTargets = arrayOf("linuxX64", "linuxArm64")
     val mingwTargets = arrayOf<String>()
-    val nativeTargets = linuxTargets + darwinTargets + mingwTargets
+    val nativeTargets = linuxTargets + macosTargets + mingwTargets
 
 }
 
 kotlin {
-    jvm{
+    jvm {
         withJava()
     }
     for (target in Targets.nativeTargets) {
@@ -39,6 +38,7 @@ kotlin {
                 implementation(libs.ktor.server.core)
                 implementation(libs.ktor.server.host.common)
                 implementation(libs.ktor.server.cio)
+                implementation(libs.squareup.okio)
                 implementation(libs.logback.classic)
             }
         }
@@ -46,6 +46,17 @@ kotlin {
             dependencies {
                 implementation(kotlin("test"))
                 implementation(libs.ktor.server.tests)
+            }
+        }
+        val nativeMain by creating {
+            dependsOn(commonMain)
+        }
+        Targets.nativeTargets.forEach { target ->
+            getByName("${target}Main") {
+                dependsOn(nativeMain)
+            }
+            getByName("${target}Test") {
+                dependsOn(nativeMain)
             }
         }
     }
