@@ -1,1 +1,1 @@
-# A multiplatform (JVM & Native) Static Content Ktor Server
+# A Multiplatform (JVM & Native) Static Content Ktor Server
