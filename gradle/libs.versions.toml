@@ -7,20 +7,20 @@ io-ktor-plugin = { id = "io.ktor.plugin", version.ref = "ktor" }
 
 [versions]
 
-kotlin = "1.9.10"
-ktor = "2.3.4"
-okio = "3.5.0"
+kotlin = "2.0.21"
+ktor = "3.0.0"
+io = "0.5.4"
 
-logback-classic = "1.4.11"
+logback-classic = "1.5.10"
 
 [libraries]
 
-ktor-bom = { group = "io.ktor", name = "ktor-bom", version.ref = "ktor" }
-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor"  }
-ktor-server-host-common = { module = "io.ktor:ktor-server-host-common", version.ref = "ktor"  }
-ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor"  }
-ktor-server-tests = { module = "io.ktor:ktor-server-tests", version.ref = "ktor"  }
+ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
+ktor-server-host-common = { module = "io.ktor:ktor-server-host-common", version.ref = "ktor" }
+ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
+ktor-server-tests = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
-squareup-okio = { module = "com.squareup.okio:okio", version.ref = "okio" }
+io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "io" }
+io-bytestring = { module = "org.jetbrains.kotlinx:kotlinx-io-bytestring", version.ref = "io" }
 
-logback-classic = { module =  "ch.qos.logback:logback-classic", version.ref = "logback-classic"  }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-classic" }

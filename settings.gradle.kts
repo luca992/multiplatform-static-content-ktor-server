@@ -13,7 +13,7 @@ dependencyResolutionManagement {
 }
 
 plugins {
-    id("de.fayard.refreshVersions") version "0.60.2"
+    id("de.fayard.refreshVersions") version "0.60.5"
 }
 
 refreshVersions { // Optional: configure the plugin

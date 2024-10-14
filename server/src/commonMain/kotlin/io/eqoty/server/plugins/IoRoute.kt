@@ -6,28 +6,31 @@ import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.util.*
-import io.ktor.util.date.*
 import io.ktor.utils.io.*
 import io.ktor.utils.io.charsets.*
-import okio.*
+import kotlinx.io.buffered
+import kotlinx.io.files.FileMetadata
+import kotlinx.io.files.Path
+import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.files.SystemPathSeparator
 
-expect val fileSystem: FileSystem
 
 // source:
 // https://slack-chats.kotlinlang.org/t/2527462/how-do-i-setup-static-routing-with-the-native-version-of-kto
 // https://gist.github.com/Stexxe/4867bbd9b44339f9f9adc39e166894ca
 fun Route.files(folder: String) {
-    val dir = staticRootFolder?.resolve(folder) ?: return
+    val dir = staticRootFolder?.let { Path(it, folder) } ?: return
     val pathParameter = "static-content-path-parameter"
     get("{$pathParameter...}") {
-        val relativePath = call.parameters.getAll(pathParameter)?.joinToString(Path.DIRECTORY_SEPARATOR) ?: return@get
-        val file = dir.resolve(relativePath)
+        val relativePath =
+            call.parameters.getAll(pathParameter)?.joinToString(SystemPathSeparator.toString()) ?: return@get
+        val file = Path(dir, relativePath)
         call.respondStatic(file)
     }
 }
 
 fun Route.default(localPath: String) {
-    val path = staticRootFolder?.resolve(localPath) ?: return
+    val path = staticRootFolder?.let { Path(it, localPath) } ?: return
     get {
         call.respondStatic(path)
     }
@@ -46,7 +49,7 @@ var Route.staticRootFolder: Path?
     }
 
 fun Route.file(remotePath: String, localPath: String) {
-    val path = staticRootFolder?.resolve(localPath) ?: return
+    val path = staticRootFolder?.let { Path(it, localPath) } ?: return
 
     get(remotePath) {
         call.respondStatic(path)
@@ -54,7 +57,7 @@ fun Route.file(remotePath: String, localPath: String) {
 }
 
 suspend inline fun ApplicationCall.respondStatic(path: Path) {
-    if (fileSystem.exists(path)) {
+    if (SystemFileSystem.exists(path)) {
         respond(LocalFileContent(path, ContentType.defaultForFile(path)))
     }
 }
@@ -71,18 +74,17 @@ fun List<ContentType>.selectDefault(): ContentType {
 }
 
 class LocalFileContent(
-    private val path: Path,
-    override val contentType: ContentType = ContentType.defaultForFile(path)
+    private val path: Path, override val contentType: ContentType = ContentType.defaultForFile(path)
 ) : OutgoingContent.WriteChannelContent() {
 
-    override val contentLength: Long get() = stat().size ?: -1
+    override val contentLength: Long get() = stat()?.size ?: -1
     override suspend fun writeTo(channel: ByteWriteChannel) {
-        val source = fileSystem.source(path)
+        val source = SystemFileSystem.source(path)
         source.use { fileSource ->
-            fileSource.buffer().use { bufferedFileSource ->
+            fileSource.buffered().use { bufferedFileSource ->
                 val buf = ByteArray(4 * 1024)
                 while (true) {
-                    val read = bufferedFileSource.read(buf)
+                    val read = bufferedFileSource.readAtMostTo(buf)
                     if (read <= 0) break
                     channel.writeFully(buf, 0, read)
                 }
@@ -91,16 +93,16 @@ class LocalFileContent(
     }
 
     init {
-        if (!fileSystem.exists(path)) {
-            throw IllegalStateException("No such file ${path.normalized()}")
+        if (!SystemFileSystem.exists(path)) {
+            throw IllegalStateException("No such file $path")
         }
 
-        stat().lastModifiedAtMillis?.let {
-            versions += LastModifiedVersion(GMTDate(it))
-        }
+//        stat().lastModifiedAtMillis?.let {
+//            versions += LastModifiedVersion(GMTDate(it))
+//        }
     }
 
-    private fun stat(): FileMetadata {
-        return fileSystem.metadata(path)
+    private fun stat(): FileMetadata? {
+        return SystemFileSystem.metadataOrNull(path)
     }
 }
